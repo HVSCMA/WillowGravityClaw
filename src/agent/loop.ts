@@ -11,7 +11,7 @@ export function resetContext() {
 }
 
 // Global state for dynamic model swapping (Sprint 3)
-export let currentModel = "anthropic/claude-3.5-sonnet";
+export let currentModel = "google/gemini-2.5-pro";
 export let currentThinkLevel = "default";
 
 // Inject helper to change models from telegram.ts

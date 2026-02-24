@@ -67,7 +67,7 @@ bot.command("model", async (ctx) => {
     const modelTarget = rawArgs.join(" ").trim();
 
     if (!modelTarget) {
-        await ctx.reply("❌ Usage: `/model anthropic/claude-3-opus`", { parse_mode: "Markdown" });
+        await ctx.reply("❌ Usage: `/model google/gemini-2.5-pro`", { parse_mode: "Markdown" });
         return;
     }
 
