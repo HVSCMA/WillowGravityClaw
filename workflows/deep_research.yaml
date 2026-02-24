@@ -1,0 +1,16 @@
+name: "Deep Executive Research"
+description: "A 2-step mesh that delegates fact-finding to a researcher agent, and then drafts an executive summary via a writer agent."
+steps:
+  - id: researcher_step
+    action: "delegate_to_subagent"
+    args:
+      role_description: "You are an expert researcher. Compile 3 highly factual bullet points about the topic provided by the user."
+      task: "Topic to research: {{input}}"
+      model: "google/gemini-2.5-flash"
+  
+  - id: compiler_step
+    action: "delegate_to_subagent"
+    args:
+      role_description: "You are a C-level executive assistant. Draft a 1 paragraph executive summary based ONLY on the raw notes."
+      task: "Raw Notes: {{researcher_step.result}}"
+      model: "google/gemini-2.5-pro"

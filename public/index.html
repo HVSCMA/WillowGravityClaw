@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Claw | Master Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="glow-bg"></div>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="glass-panel header">
+            <div class="logo">
+                <span class="emoji">🦞</span>
+                <h1>Gravity Claw</h1>
+            </div>
+
+            <!-- Tab Navigation (Phase 13) -->
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-telemetry">Telemetry</button>
+                <button class="tab-btn" id="tab-canvas">Agentic Canvas</button>
+                <button class="tab-btn" id="tab-action-queue">Action Queue <span class="badge">0</span></button>
+            </div>
+
+            <div class="status-indicator">
+                <div class="ping"></div>
+                <span>SYSTEM ONLINE</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid-layout" id="view-telemetry">
+
+            <!-- Left Column: Metrics -->
+            <div class="metrics-column">
+                <!-- System Uptime -->
+                <div class="glass-panel metric-card">
+                    <h3>System Uptime</h3>
+                    <div class="metric-value font-mono glow-text" id="uptime-display">00:00:00</div>
+                </div>
+
+                <!-- Memory Usage -->
+                <div class="glass-panel metric-card">
+                    <h3>Memory Allocation</h3>
+                    <div class="metric-value font-mono glow-text" id="memory-display">0.00 MB</div>
+                </div>
+
+                <!-- Active Integrations -->
+                <div class="glass-panel integration-card">
+                    <h3>Active Integrations</h3>
+                    <ul class="integration-list" id="integration-list">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+                <!-- Guided Setup (Phase 12) -->
+                <div class="glass-panel setup-card" id="setup-card">
+                    <h3 id="setup-title">Action Required</h3>
+                    <div id="setup-content">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Terminal -->
+            <div class="terminal-column glass-panel">
+                <div class="terminal-header">
+                    <h3>Live System Logs</h3>
+                    <div class="terminal-controls">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+                </div>
+                <div class="terminal-output font-mono" id="log-container">
+                    <!-- Logs populated by JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Agentic Canvas View (Phase 13) -->
+        <div class="canvas-layout hidden" id="view-canvas">
+            <div class="canvas-display glass-panel" id="canvas-container">
+                <div class="welcome-message">
+                    <h3>Welcome to the Agentic Canvas</h3>
+                    <p>I am Gravity Claw. I can morph this UI based on the tools I'm using. Give me a command to get
+                        started.</p>
+                </div>
+            </div>
+            <div class="canvas-input-area glass-panel">
+                <input type="text" id="chat-input" placeholder="Type a command or multimodal request..."
+                    autocomplete="off">
+                <button id="chat-send">Send</button>
+            </div>
+        </div>
+
+        <!-- Action Queue View (WILLOW V50) -->
+        <div class="action-queue-layout hidden" id="view-action-queue">
+            <div class="action-queue-header">
+                <h2>Pending C-Suite Authorizations</h2>
+                <p>Human Oracle verification required before system execution blocks proceed.</p>
+            </div>
+            <div id="action-queue-container" class="action-queue-grid">
+                <!-- Dynamically populated via websockets from WILLOW C.C.O. and C.M.O. -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- External Libraries for Morphing UI -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

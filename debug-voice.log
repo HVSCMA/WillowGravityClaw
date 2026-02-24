@@ -1,0 +1,27 @@
+
+
+[Voice Error] 2026-02-22T20:50:11.702Z
+Error: Failed to transcribe audio.
+    at transcribeAudio (C:\Users\glenn\GravityClaw\src\services\whisper.ts:19:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (C:\Users\glenn\GravityClaw\src\bot\telegram.ts:52:33)
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:578:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:62:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:578:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:62:13
+    at async whitelistMiddleware (C:\Users\glenn\GravityClaw\src\bot\middleware.ts:7:9)
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:62:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:57:9
+
+[Voice Error] 2026-02-22T20:51:24.309Z
+Error: Failed to transcribe audio: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.
+    at transcribeAudio (C:\Users\glenn\GravityClaw\src\services\whisper.ts:19:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (C:\Users\glenn\GravityClaw\src\bot\telegram.ts:52:33)
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:578:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:62:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:578:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:62:13
+    at async whitelistMiddleware (C:\Users\glenn\GravityClaw\src\bot\middleware.ts:7:9)
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:62:13
+    at async C:\Users\glenn\GravityClaw\node_modules\grammy\out\composer.js:57:9
