@@ -202,6 +202,13 @@ app.post("/api/chat", async (req, res) => {
 
         console.log(`[Canvas] Received chat message: ${message}`);
 
+        if (message.trim().toLowerCase() === "/new") {
+            const { resetContext } = await import("./agent/loop.js");
+            resetContext();
+            updateLiveCanvas({ type: "markdown", content: "🧹 *Context Wiped:*\nI've cleared the recent conversation window." });
+            return res.status(200).json({ status: "Success" });
+        }
+
         // Let the user know the agent is thinking
         updateLiveCanvas({ type: "markdown", content: "*Thinking...*" });
 
