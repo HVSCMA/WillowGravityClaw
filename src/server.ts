@@ -142,6 +142,28 @@ app.post("/webhook", async (req, res) => {
 import { initializePipeline, resumePipeline } from "./services/willow/pipeline.js";
 import { activePipelines } from "./services/willow/pipelineState.js";
 
+// --- SENSORY CONTEXT MEMORY (Phase 14) ---
+export const leadSensoryContext: Record<string, any> = {};
+
+app.post("/api/sensory/fub_lead", (req, res) => {
+    try {
+        const { leadId, sourceUrl, context } = req.body;
+        if (!leadId) return res.status(400).json({ error: "Missing leadId" });
+
+        leadSensoryContext[leadId] = {
+            sourceUrl,
+            context,
+            lastUpdated: new Date().toISOString()
+        };
+
+        console.log(`[Sensory] Context updated for FUB Lead: ${leadId}`);
+        res.status(200).json({ status: "Received" });
+    } catch (err) {
+        console.error("[Sensory] Error:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 // WILLOW V50 - Endpoint for Inbound Fello Intent
 app.post("/webhook/fello", async (req, res) => {
     try {
@@ -195,28 +217,43 @@ app.post("/api/willow/execute/:leadId", async (req, res) => {
 // Chat API for the Agentic Canvas
 app.post("/api/chat", async (req, res) => {
     try {
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ error: "Message is required" });
+        const { message, fublead, mediaBase64 } = req.body;
+        if (!message && !mediaBase64) {
+            return res.status(400).json({ error: "Message or media is required" });
         }
 
-        console.log(`[Canvas] Received chat message: ${message}`);
+        console.log(`[Canvas] Received chat message: ${message || '<Visual Prompt>'} for Lead: ${fublead || 'Global'}`);
 
-        if (message.trim().toLowerCase() === "/new") {
+        if (message && message.trim().toLowerCase() === "/new") {
             const { resetContext } = await import("./agent/loop.js");
             resetContext();
-            updateLiveCanvas({ type: "markdown", content: "🧹 *Context Wiped:*\nI've cleared the recent conversation window." });
+            updateLiveCanvas({ type: "markdown", content: "🧹 *Context Wiped:*\nI've cleared the recent conversation window." }, fublead);
             return res.status(200).json({ status: "Success" });
         }
 
-        // Let the user know the agent is thinking
-        updateLiveCanvas({ type: "markdown", content: "*Thinking...*" });
+        // Decode Phase 15 Hardward Sensory Packets
+        let mediaFrames = undefined;
+        if (mediaBase64) {
+            const match = mediaBase64.match(/^data:(image\/[a-zA-Z]+);base64,(.*)$/);
+            if (match) {
+                const mimeType = match[1];
+                const base64Data = match[2];
+                mediaFrames = [{
+                    buffer: Buffer.from(base64Data, "base64"),
+                    mimeType: mimeType
+                }];
+                console.log(`[Canvas] Hardware Sensory Payload Decoded: ${mimeType}`);
+            }
+        }
 
-        // Run the agent loop
-        const aiResponse = await runAgentLoop(message);
+        // Let the user know the agent is thinking
+        updateLiveCanvas({ type: "markdown", content: "*Thinking...*" }, fublead);
+
+        // Run the agent loop (passing fublead context)
+        const aiResponse = await runAgentLoop(message || "Analyze this image.", mediaFrames, fublead);
 
         // Push the final result to the canvas
-        updateLiveCanvas({ type: "markdown", content: aiResponse });
+        updateLiveCanvas({ type: "markdown", content: aiResponse }, fublead);
 
         res.status(200).json({ status: "Success" });
     } catch (error) {
@@ -226,12 +263,25 @@ app.post("/api/chat", async (req, res) => {
 });
 
 
-export function updateLiveCanvas(payload: { type: string, content: string, widgetType?: string }) {
-    io.emit("canvas_update", payload);
+export function updateLiveCanvas(payload: { type: string, content: string, widgetType?: string }, fublead?: string) {
+    if (fublead) {
+        io.to(`fublead_${fublead}`).emit("canvas_update", payload);
+    } else {
+        io.emit("canvas_update", payload);
+    }
 }
 
 io.on("connection", (socket) => {
     console.log("[Socket.io] Client connected to Live Canvas.");
+
+    socket.on("join_room", (fublead) => {
+        if (fublead) {
+            const roomName = `fublead_${fublead}`;
+            socket.join(roomName);
+            console.log(`[Socket.io] Client joined room: ${roomName}`);
+        }
+    });
+
     socket.on("disconnect", () => {
         console.log("[Socket.io] Client disconnected.");
     });

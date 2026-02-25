@@ -1,0 +1,27 @@
+/* content.css */
+
+#gravity-claw-sidecar-wrapper {
+    position: fixed;
+    top: 0;
+    right: -360px;
+    /* Hidden initially */
+    width: 350px;
+    height: 100vh;
+    background: transparent;
+    border: none;
+    z-index: 2147483647;
+    /* Max z-index to stay on top of FUB */
+    transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+#gravity-claw-sidecar-wrapper.open {
+    right: 0;
+}
+
+#gravity-claw-sidecar-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+}

@@ -142,8 +142,16 @@ function initDashboard() {
     initCanvas();
 }
 
-// --- Phase 13: Agentic Canvas UI Logic ---
+// --- Phase 13 & 14: Agentic Canvas UI Logic ---
 function initCanvas() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fublead = urlParams.get('fublead');
+    const mode = urlParams.get('mode');
+
+    if (mode === 'sidecar') {
+        document.body.classList.add('sidecar-mode');
+    }
+
     const tabTelemetry = document.getElementById('tab-telemetry');
     const tabCanvas = document.getElementById('tab-canvas');
     const tabActionQueue = document.getElementById('tab-action-queue');
@@ -155,6 +163,35 @@ function initCanvas() {
     const chatInput = document.getElementById('chat-input');
     const chatSend = document.getElementById('chat-send');
     const canvasContainer = document.getElementById('canvas-container');
+
+    // Optic Nerve Elements (Phase 15)
+    const opticToggleBtn = document.getElementById('optic-nerve-toggle');
+    const opticPreviewContainer = document.getElementById('optic-nerve-preview-container');
+    const hardwareStreamVideo = document.getElementById('sensory-hardware-stream');
+    let hardwareStreamActive = false;
+    let localMediaStream = null;
+
+    // Global Lead Search Logic
+    const searchInput = document.getElementById('global-lead-search');
+    const searchBtn = document.getElementById('global-search-btn');
+
+    if (searchInput && searchBtn) {
+        function executeSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            // Native Jump to FUB UUID Workspace
+            window.location.href = `/?fublead=${encodeURIComponent(query)}`;
+        }
+        searchBtn.addEventListener('click', executeSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeSearch();
+        });
+    }
+
+    if (mode === 'sidecar' || fublead) {
+        // Auto-focus canvas if we are in sidecar mode or loaded a specific lead
+        setTimeout(() => tabCanvas.click(), 50);
+    }
 
     // Tab Switching Logic
     tabTelemetry.addEventListener('click', () => {
@@ -188,20 +225,83 @@ function initCanvas() {
         viewTelemetry.classList.add('hidden');
     });
 
+    // --- Phase 15: Hardware Optic Nerve ---
+    async function toggleOpticNerve() {
+        if (hardwareStreamActive) {
+            // Shut Down
+            if (localMediaStream) {
+                localMediaStream.getTracks().forEach(track => track.stop());
+            }
+            hardwareStreamVideo.srcObject = null;
+            opticPreviewContainer.classList.add('hidden');
+            opticToggleBtn.classList.remove('active');
+            hardwareStreamActive = false;
+            console.log("[Canvas] Optic Nerve deactivated.");
+        } else {
+            // Boot Up
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                localMediaStream = stream;
+                hardwareStreamVideo.srcObject = stream;
+                opticPreviewContainer.classList.remove('hidden');
+                opticToggleBtn.classList.add('active');
+                hardwareStreamActive = true;
+                console.log("[Canvas] Optic Nerve engaged.");
+            } catch (err) {
+                console.error("[Canvas] Failed to access hardware sensors:", err);
+                alert("Optic Nerve Error: Could not access hardware camera. Check permissions.");
+            }
+        }
+    }
+
+    if (opticToggleBtn) {
+        opticToggleBtn.addEventListener('click', toggleOpticNerve);
+    }
+
+    // Capture the current frame from the webcam stream
+    function captureHardwareFrame() {
+        if (!hardwareStreamActive || !hardwareStreamVideo) return null;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = hardwareStreamVideo.videoWidth;
+        canvas.height = hardwareStreamVideo.videoHeight;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(hardwareStreamVideo, 0, 0, canvas.width, canvas.height);
+
+        // Return Base64 JPEG data
+        return canvas.toDataURL('image/jpeg', 0.85); // 85% quality to save bandwidth
+    }
+
     // Chat Sending Logic
     async function sendMessage() {
         const text = chatInput.value.trim();
-        if (!text) return;
+        const frameData = captureHardwareFrame();
+
+        if (!text && !frameData) return; // Allow purely visual prompts if needed, but text is preferred
 
         // Render user message immediately
-        appendCanvasBlock(text, 'user');
+        let displayMessage = text;
+        if (frameData) {
+            displayMessage = `[📸 Optic Frame Captured] ${text}`;
+        }
+        appendCanvasBlock(displayMessage, 'user');
         chatInput.value = '';
 
         try {
+            const payload = {
+                message: text || "Analyze the attached physical space/document.",
+                fublead: fublead
+            };
+
+            if (frameData) {
+                payload.mediaBase64 = frameData;
+            }
+
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
@@ -220,6 +320,11 @@ function initCanvas() {
 
     // Polymorphic WebSocket Logic
     const socket = io();
+
+    if (fublead) {
+        socket.emit('join_room', fublead);
+        console.log(`[Canvas] Joined FUB Context Room: ${fublead}`);
+    }
 
     socket.on('canvas_update', (payload) => {
         console.log("Canvas Update Received:", payload);

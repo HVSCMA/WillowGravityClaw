@@ -23,9 +23,6 @@ export function setCurrentThinkLevel(level: string) {
     currentThinkLevel = level;
 }
 
-// Cache for loaded skills
-let loadedSkills: SystemSkill[] | null = null;
-
 // Initialize OpenAI client pointing to OpenRouter
 const ai = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
@@ -38,7 +35,8 @@ const ai = new OpenAI({
 
 export async function runAgentLoop(
     userMessage: string,
-    media?: { buffer: Buffer; mimeType: string }[]
+    media?: { buffer: Buffer; mimeType: string }[],
+    fublead?: string
 ): Promise<string> {
 
     const messageLog = media ? `[Attachments: ${media.map(m => m.mimeType).join(', ')}] ${userMessage} ` : userMessage;
@@ -59,10 +57,8 @@ export async function runAgentLoop(
         systemPrompt += "\nCRITICAL: Be extremely concise and fast. Do not use tools unless absolutely necessary.";
     }
 
-    // Load skills once and cache them
-    if (loadedSkills === null) {
-        loadedSkills = await loadSystemSkills();
-    }
+    // Load skills dynamically every time so changes take effect immediately
+    const loadedSkills = await loadSystemSkills();
     const skillsPromptBlock = await buildSkillsPrompt(loadedSkills);
     systemPrompt += skillsPromptBlock; // Inject Markdown Skills
 
@@ -144,7 +140,7 @@ export async function runAgentLoop(
                     console.log(`[Agent] Calling tool: ${toolName} `);
 
                     // Broadcast to the PolyMorphic UI that we are using a tool
-                    updateLiveCanvas({ type: "markdown", content: `*Agent is using tool:* \`${toolName}\`...` });
+                    updateLiveCanvas({ type: "markdown", content: `*Agent is using tool:* \`${toolName}\`...` }, fublead);
 
                     const result = await executeTool(toolName, args);
 

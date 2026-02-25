@@ -26,6 +26,12 @@
                 <button class="tab-btn" id="tab-action-queue">Action Queue <span class="badge">0</span></button>
             </div>
 
+            <!-- Global Lead Search (Phase 14) -->
+            <div class="global-search" id="global-search-container">
+                <input type="text" id="global-lead-search" placeholder="Search FUB Lead ID..." autocomplete="off">
+                <button id="global-search-btn">Jump</button>
+            </div>
+
             <div class="status-indicator">
                 <div class="ping"></div>
                 <span>SYSTEM ONLINE</span>
@@ -83,7 +89,7 @@
 
         </div>
 
-        <!-- Agentic Canvas View (Phase 13) -->
+        <!-- Agentic Canvas View (Phase 13, 14, 15) -->
         <div class="canvas-layout hidden" id="view-canvas">
             <div class="canvas-display glass-panel" id="canvas-container">
                 <div class="welcome-message">
@@ -92,7 +98,19 @@
                         started.</p>
                 </div>
             </div>
+
+            <!-- Sensory Media Preview (Phase 15) -->
+            <div id="optic-nerve-preview-container" class="hidden">
+                <video id="sensory-hardware-stream" autoplay playsinline muted></video>
+                <div class="recording-indicator">
+                    <div class="ping"></div> <span>OPTIC NERVE ACTIVE</span>
+                </div>
+            </div>
+
             <div class="canvas-input-area glass-panel">
+                <button id="optic-nerve-toggle" class="optic-btn" title="Toggle Optic Nerve (Webcam Focus)">
+                    <span class="emoji">👁️</span>
+                </button>
                 <input type="text" id="chat-input" placeholder="Type a command or multimodal request..."
                     autocomplete="off">
                 <button id="chat-send">Send</button>

@@ -155,8 +155,21 @@ bot.on("message:voice", async (ctx) => {
 
         let replyText: string;
         try {
-            // 4. Run the conversational agent loop, passing the audio buffer directly to Gemini
-            replyText = await runAgentLoop("", [{ buffer, mimeType: "audio/ogg" }]);
+            // Write buffer to temporary file for Whisper
+            const tempFilePath = path.join(process.cwd(), `temp_voice_${Date.now()}.ogg`);
+            fs.writeFileSync(tempFilePath, buffer);
+
+            // Transcribe using Whisper
+            await ctx.reply(`🎙️ _Transcribing audio with Whisper..._`, { parse_mode: "Markdown" });
+            const transcription = await transcribeAudio(tempFilePath);
+
+            // Clean up temp file
+            fs.unlinkSync(tempFilePath);
+
+            await ctx.reply(`🗣️ *You said:* "${transcription}"`, { parse_mode: "Markdown" });
+
+            // 4. Run the conversational agent loop with the transcribed text
+            replyText = await runAgentLoop(transcription);
         } finally {
             clearInterval(typingInterval);
         }
