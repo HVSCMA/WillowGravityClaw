@@ -25,8 +25,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve static frontend files for Live Canvas
-app.use(express.static(path.join(process.cwd(), "public")));
+// Serve static frontend files for Live Canvas (with strict anti-caching for real-time PWAs)
+app.use(express.static(path.join(process.cwd(), "public"), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html') || path.endsWith('.js') || path.endsWith('.css')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        }
+    }
+}));
 
 // --- IN-MEMORY LOG BUFFER (B.L.A.S.T. Dashboard) ---
 const MAX_LOGS = 200;
