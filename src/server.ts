@@ -129,7 +129,7 @@ app.post("/webhook", async (req, res) => {
         const systemPrompt = `SYSTEM WEBHOOK ALERT:\nYou have received a new autonomous event from an external server. Analyze the following payload, extract the most critical actionable information, and draft an urgent alert for the user.\n\nPAYLOAD:\n${JSON.stringify(payload, null, 2)}`;
 
         // Pass this hidden prompt to the agent loop to reason over
-        const aiAnalysis = await runAgentLoop(systemPrompt);
+        const aiAnalysis = await runAgentLoop(systemPrompt, undefined, undefined, "system-webhook");
 
         // Alert the user on Telegram
         await bot.api.sendMessage(ownerId, `🔔 *Autonomous Integration Alert*\n\n${aiAnalysis}`, { parse_mode: "Markdown" });
@@ -225,9 +225,10 @@ app.post("/api/chat", async (req, res) => {
         console.log(`[Canvas] Received chat message: ${message || '<Visual Prompt>'} for Lead: ${fublead || 'Global'}`);
 
         if (message && message.trim().toLowerCase() === "/new") {
-            const { resetContext } = await import("./agent/loop.js");
-            resetContext();
-            updateLiveCanvas({ type: "markdown", content: "🧹 *Context Wiped:*\nI've cleared the recent conversation window." }, fublead);
+            const { resetSessionContext } = await import("./agent/loop.js");
+            const targetSession = fublead || "default-session";
+            await resetSessionContext(targetSession);
+            updateLiveCanvas({ type: "markdown", content: `🧹 *Context Wiped:*\nI've cleared the Supabase memory for session: \`${targetSession}\`.` }, fublead);
             return res.status(200).json({ status: "Success" });
         }
 
@@ -250,7 +251,7 @@ app.post("/api/chat", async (req, res) => {
         updateLiveCanvas({ type: "markdown", content: "*Thinking...*" }, fublead);
 
         // Run the agent loop (passing fublead context)
-        const aiResponse = await runAgentLoop(message || "Analyze this image.", mediaFrames, fublead);
+        const aiResponse = await runAgentLoop(message || "Analyze this image.", mediaFrames, fublead, fublead || "web-dashboard");
 
         // Push the final result to the canvas
         updateLiveCanvas({ type: "markdown", content: aiResponse }, fublead);

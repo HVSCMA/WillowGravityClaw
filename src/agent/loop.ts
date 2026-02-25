@@ -2,12 +2,13 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/index.mjs";
 import { config } from "../config.js";
 import { getTools, executeTool } from "./tools.js";
-import { getRecentMessages, saveMessage, clearRecentMessages } from "../db/memory.js";
+import { getSessionHistory, saveMessage, searchSimilarMessages } from "../memory/supabaseMemory.js";
 import { loadSystemSkills, buildSkillsPrompt, SystemSkill } from "../tools/skills.js";
 import { updateLiveCanvas } from "../server.js";
 
-export function resetContext() {
-    clearRecentMessages();
+export async function resetSessionContext(sessionId: string): Promise<boolean> {
+    const { clearSessionHistory } = await import("../memory/supabaseMemory.js");
+    return clearSessionHistory(sessionId);
 }
 
 // Global state for dynamic model swapping (Sprint 3)
@@ -36,21 +37,37 @@ const ai = new OpenAI({
 export async function runAgentLoop(
     userMessage: string,
     media?: { buffer: Buffer; mimeType: string }[],
-    fublead?: string
+    fublead?: string,
+    sessionIdParam?: string
 ): Promise<string> {
+    const sessionId = sessionIdParam || fublead || "default-session";
+    const messageLog = media ? `[Attachments: ${media.map(m => m.mimeType).join(', ')}] ${userMessage}` : userMessage;
 
-    const messageLog = media ? `[Attachments: ${media.map(m => m.mimeType).join(', ')}] ${userMessage} ` : userMessage;
-    saveMessage("user", messageLog);
+    // Save User message asynchronously
+    saveMessage(sessionId, "user", messageLog);
 
-    const recentDbMessages = getRecentMessages(10);
+    // 1. Immediate Chronological Context
+    const recentDbMessages = await getSessionHistory(sessionId, 10);
 
     const conversationHistory: ChatCompletionMessageParam[] = recentDbMessages.map(msg => ({
         role: msg.role === "user" ? "user" : "assistant",
         content: msg.content
     }));
 
+    // 2. Deep Semantic Context
+    let semanticMemoryBlock = "";
+    if (userMessage && userMessage.length > 4) {
+        const similarMemories = await searchSimilarMessages(userMessage, 0.4, 4, sessionId);
+        if (similarMemories.length > 0) {
+            semanticMemoryBlock = "\n\n[RELEVANT PAST MEMORIES RETRIEVED VIA SEMANTIC SEARCH]\n" +
+                similarMemories.map(m => `[Old Session: ${m.session_id}] ${m.role.toUpperCase()}: ${m.content}`).join("\n");
+        }
+    }
+
     // Inject system instructions and thinking levels
     let systemPrompt = "You are Gravity Claw, a personal AI agent. You have access to tools that you can use to answer questions or use your memory.";
+    if (semanticMemoryBlock) systemPrompt += semanticMemoryBlock;
+
     if (currentThinkLevel === "high") {
         systemPrompt += "\nCRITICAL: Think deeply and step-by-step before answering. Exhaustively analyze the user's intent.";
     } else if (currentThinkLevel === "low") {
@@ -166,7 +183,7 @@ export async function runAgentLoop(
                 iteration++;
             } else {
                 const finalAns = responseMessage.content || "No response generated.";
-                saveMessage("model", finalAns);
+                saveMessage(sessionId, "assistant", finalAns);
                 return finalAns;
             }
         } catch (error) {
@@ -185,38 +202,5 @@ export async function runAgentLoop(
 }
 
 export async function compactContext(): Promise<string> {
-    const recentDbMessages = getRecentMessages(50);
-
-    if (recentDbMessages.length < 2) {
-        return "Context is already small, nothing to compact.";
-    }
-
-    const conversationHistory: ChatCompletionMessageParam[] = recentDbMessages.map(msg => ({
-        role: msg.role === "user" ? "user" : "assistant",
-        content: msg.content
-    }));
-
-    conversationHistory.push({
-        role: "user",
-        content: "CRITICAL SYSTEM INSTRUCTION: Summarize the entire conversation above into a concise, dense paragraph of core facts, context, and the current state of tasks. Exclude pleasantries and verbosity. This summary will replace the actual conversation history in the database, so ensure absolutely nothing critical or factual is lost."
-    });
-
-    console.log("[Agent] Compacting context window...");
-
-    try {
-        const response = await ai.chat.completions.create({
-            model: currentModel,
-            messages: conversationHistory
-        });
-
-        const summary = response.choices[0]?.message?.content || "Failed to generate summary.";
-
-        clearRecentMessages();
-        saveMessage("model", `[COMPACTED CONTEXT] ${summary} `);
-
-        return "🧠 *Context Compacted:*\nYour conversation history has been successfully compressed into a dense summary, freeing up working memory.";
-    } catch (error) {
-        console.error("Compaction error:", error);
-        return "Failed to compact context due to an API error.";
-    }
+    return "🧠 *Context Architecture Upgraded:*\nMemory compaction is no longer required. Gravity Claw now relies on persistent vector database architecture (Supabase + pgvector) for scalable, infinite semantic retrieval.";
 }
