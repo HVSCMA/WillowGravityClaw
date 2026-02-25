@@ -1,15 +1,16 @@
 :root {
-    --bg-base: #0f172a;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --accent: #38bdf8;
-    --accent-glow: rgba(56, 189, 248, 0.4);
+    --bg-base: #030712;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --accent: #cba36b;
+    /* Premium Gold Accent */
+    --accent-glow: rgba(203, 163, 107, 0.5);
 
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(17, 24, 39, 0.75);
+    --glass-border: rgba(203, 163, 107, 0.15);
 
     --success: #10b981;
-    --warning: #fbbf24;
+    --warning: #f59e0b;
     --danger: #ef4444;
 }
 
@@ -38,10 +39,20 @@ body {
     width: 100vw;
     height: 100vh;
     background-image:
-        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.2) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.2) 0, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(203, 163, 107, 0.12) 0, transparent 60%),
+        radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.15) 0, transparent 60%);
     z-index: -1;
+    animation: drift 20s infinite alternate ease-in-out;
+}
+
+@keyframes drift {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.05);
+    }
 }
 
 .dashboard-container {
@@ -71,17 +82,31 @@ body {
     padding: 1.5rem 2rem;
 }
 
-.logo {
+.brand {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-direction: column;
 }
 
-.logo h1 {
+.brand h1 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: -0.02em;
+}
+
+.brand h1 span.gold {
+    color: var(--accent);
+}
+
+.subtitle {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 500;
+    margin-top: 4px;
 }
 
 .status-indicator {

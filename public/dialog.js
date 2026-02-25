@@ -13,11 +13,27 @@ const urlParams = new URLSearchParams(window.location.search);
 const sessionId = urlParams.get('session') || "dialog-mobile";
 
 function appendMessage(role, text) {
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.className = `message-wrapper ${role}`;
+
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'message-label';
+    labelDiv.textContent = role === 'user' ? 'Broker Command' : 'Oracle AI';
+
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${role}`;
     msgDiv.textContent = text;
-    transcriptItem.appendChild(msgDiv);
-    transcriptItem.scrollTop = transcriptItem.scrollHeight;
+
+    wrapperDiv.appendChild(labelDiv);
+    wrapperDiv.appendChild(msgDiv);
+
+    transcriptItem.appendChild(wrapperDiv);
+
+    // Smooth scroll to bottom
+    setTimeout(() => {
+        transcriptItem.scrollTo({ top: transcriptItem.scrollHeight, behavior: 'smooth' });
+    }, 50);
+
     return msgDiv;
 }
 
@@ -57,11 +73,17 @@ micBtn.addEventListener('click', async () => {
             mediaRecorder.start();
             isRecording = true;
             micBtn.classList.add('recording');
-            micBtn.textContent = '⏹️';
-            connectionStatus.style.backgroundColor = '#da3633'; // Red while recording
+            document.getElementById('mic-container').classList.add('recording');
+
+            // Transform icon to square (stop)
+            document.getElementById('icon-mic').innerHTML = '<path d="M6 6h12v12H6z"/>';
+
+            connectionStatus.style.backgroundColor = '#ef4444'; // Red recording
+            connectionStatus.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.8)';
+            document.getElementById('status-text').textContent = "Recording...";
         } catch (err) {
             console.error("Microphone access denied:", err);
-            alert("Microphone access is required for Dialog mode.");
+            alert("Microphone configuration required by Sovereign Protocol restrictions.");
         }
     } else {
         // Stop recording
@@ -69,10 +91,17 @@ micBtn.addEventListener('click', async () => {
         mediaRecorder.stream.getTracks().forEach(track => track.stop());
         isRecording = false;
         micBtn.classList.remove('recording');
+        document.getElementById('mic-container').classList.remove('recording');
+
         micBtn.classList.add('processing');
-        micBtn.textContent = '⏳';
+        // Transform icon to cloud sync / processing
+        document.getElementById('icon-mic').innerHTML = '<path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM13 13v4h-2v-4H8l4-4 4 4h-3z"/>';
+
         isProcessing = true;
-        connectionStatus.style.backgroundColor = '#d29922'; // Yellow while processing
+
+        connectionStatus.style.backgroundColor = '#f59e0b'; // Gold processing
+        connectionStatus.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.8)';
+        document.getElementById('status-text').textContent = "Architect Processing";
     }
 });
 
@@ -112,12 +141,16 @@ async function processAudio() {
 
     } catch (e) {
         console.error("Failed to process audio:", e);
-        userMsgNode.textContent = '⚠️ Error processing voice chunk.';
-        appendMessage('agent', 'System Error: Transmission sequence failed.');
+        userMsgNode.textContent = '⚠️ Sensory pipeline degraded.';
+        appendMessage('agent', 'Signal lost. Re-establish connection.');
     } finally {
         isProcessing = false;
         micBtn.classList.remove('processing');
-        micBtn.textContent = '🎙️';
-        connectionStatus.style.backgroundColor = '#238636'; // Back to green
+        // Reset mic icon
+        document.getElementById('icon-mic').innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>';
+
+        connectionStatus.style.backgroundColor = '#10b981'; // Back to green
+        connectionStatus.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.6)';
+        document.getElementById('status-text').textContent = "Encrypted";
     }
 }
