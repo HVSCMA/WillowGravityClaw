@@ -226,7 +226,7 @@ app.post("/api/chat", async (req, res) => {
 
         if (message && message.trim().toLowerCase() === "/new") {
             const { resetSessionContext } = await import("./agent/loop.js");
-            const targetSession = fublead || "default-session";
+            const targetSession = fublead || "web-dashboard";
             await resetSessionContext(targetSession);
             updateLiveCanvas({ type: "markdown", content: `🧹 *Context Wiped:*\nI've cleared the Supabase memory for session: \`${targetSession}\`.` }, fublead);
             return res.status(200).json({ status: "Success" });
