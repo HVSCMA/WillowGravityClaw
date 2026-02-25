@@ -7,6 +7,9 @@ import { runAgentLoop } from "./agent/loop.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
+import fs from "fs";
+import { transcribeAudio } from "./services/whisper.js";
+import { generateSpeech } from "./services/elevenlabs.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -259,6 +262,67 @@ app.post("/api/chat", async (req, res) => {
         res.status(200).json({ status: "Success" });
     } catch (error) {
         console.error("[Canvas Chat] Error processing message:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+// Real-Time Voice Dialog API
+app.post("/api/dialog", async (req, res) => {
+    try {
+        const { audioBase64, mimeType, sessionId } = req.body;
+        if (!audioBase64) {
+            return res.status(400).json({ error: "Missing audio data." });
+        }
+
+        const sid = sessionId || "dialog-mobile";
+        console.log(`[Dialog API] Received audio chunk for session: ${sid}`);
+
+        // Write base64 to temp file for Whisper processing
+        const audioBuffer = Buffer.from(audioBase64, "base64");
+        // Use a unique file name to prevent collision
+        const tempPath = path.join(process.cwd(), `temp_dialog_${Date.now()}_${Math.floor(Math.random() * 1000)}.webm`);
+        fs.writeFileSync(tempPath, audioBuffer);
+
+        let userTranscript = "";
+        let agentReply = "";
+        let audioBase64Out = "";
+
+        try {
+            // 1. Transcribe the audio via Gemini/Whisper fallback
+            userTranscript = await transcribeAudio(tempPath);
+            fs.unlinkSync(tempPath); // Clean up immediately
+
+            console.log(`[Dialog] Transcript: "${userTranscript}"`);
+
+            // Push to Canvas for observation
+            updateLiveCanvas({ type: "markdown", content: `*(Microphone Transcript)*: ${userTranscript}` }, sid);
+            updateLiveCanvas({ type: "markdown", content: "*Thinking...*" }, sid);
+
+            // 2. Process via Agent Loop using full autonomous reasoning
+            agentReply = await runAgentLoop(userTranscript, undefined, sid, sid);
+
+            updateLiveCanvas({ type: "markdown", content: agentReply }, sid);
+
+            // 3. Generate synthesized ElevenLabs speech
+            // Strip any markdown code blocks from the spoken response, this is an auditory channel
+            const cleanText = agentReply.replace(/```[\s\S]*?```/g, "").replace(/\\*/g, "").trim();
+            const responseAudioBuffer = await generateSpeech(cleanText);
+            audioBase64Out = responseAudioBuffer.toString("base64");
+
+        } catch (innerErr: any) {
+            console.error("[Dialog API] Pipeline error:", innerErr);
+            if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+            agentReply = "Sorry, my sensory processors encountered an error interpreting the audio.";
+        }
+
+        res.status(200).json({
+            userTranscript,
+            agentReply,
+            audioBase64Out
+        });
+
+    } catch (error) {
+        console.error("[Dialog API] Fatal Error:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
