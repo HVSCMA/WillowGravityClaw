@@ -1,0 +1,27 @@
+[dotenv@17.3.1] injecting env (9) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+=========================================
+ 📱 SIMULATING TELEGRAM MESSAGE ARRIVAL
+=========================================
+Simulating user asking a question from their phone via Telegram.
+Using session_id (chat.id) = 'CROSS_DEVICE_TEST'
+(node:35812) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[Agent] Iteration 1 sending to google/gemini-2.5-pro...
+[MCP] Starting server 'everything' via npx -y @modelcontextprotocol/server-everything...
+Starting default (STDIO) server...
+[MCP] Connected to everything server.
+[MCP] Found 13 tools from everything
+[Agent] Calling tool: search_memory 
+[Agent] Tool search_memory Returned: {"results":["[Role: assistant] I do not have your favorite animal on record. If you'd like to tell me, I can save it to my memory for future reference.","[Role: user] Do you remember what my favorite ...
+[Agent] Iteration 2 sending to google/gemini-2.5-pro...
+[MCP] Found 13 tools from everything
+
+🤖 Agent's Reply on Telegram: 
+Yes, your favorite animal is a shiny green Platypus.
+
+=========================================
+ ✅ TEST COMPLETE
+=========================================

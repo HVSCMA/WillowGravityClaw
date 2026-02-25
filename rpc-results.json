@@ -1,0 +1,96 @@
+{
+  "matches": 13,
+  "data": [
+    {
+      "id": "c8067432-3349-4b08-a824-96acb8862c44",
+      "session_id": "CROSS_DEVICE_TEST",
+      "role": "assistant",
+      "content": "I do not have your favorite animal on record. If you'd like to tell me, I can save it to my memory for future reference.",
+      "similarity": 0.800827932308452
+    },
+    {
+      "id": "d0560a71-862c-4430-9b90-1f5fa311bc3b",
+      "session_id": "CROSS_DEVICE_TEST",
+      "role": "user",
+      "content": "Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.",
+      "similarity": 0.72545369115749
+    },
+    {
+      "id": "7394fbe6-1678-4167-8049-ea05aaa5e13c",
+      "session_id": "CROSS_DEVICE_TEST",
+      "role": "user",
+      "content": "Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.",
+      "similarity": 0.72545369115749
+    },
+    {
+      "id": "a74092ec-d55b-4cfa-8971-4cb766498eeb",
+      "session_id": "CROSS_DEVICE_TEST",
+      "role": "user",
+      "content": "Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.",
+      "similarity": 0.72545369115749
+    },
+    {
+      "id": "2f74671d-3c98-405f-8133-2c5596e64520",
+      "session_id": "CROSS_DEVICE_TEST",
+      "role": "user",
+      "content": "Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.",
+      "similarity": 0.72545369115749
+    },
+    {
+      "id": "e403bee4-de2b-4333-8e35-aac9f33abb33",
+      "session_id": "CROSS_DEVICE_TEST",
+      "role": "user",
+      "content": "[Attachments: ] Hi! I wanted to let you know that my favorite animal is a shiny green Platypus.",
+      "similarity": 0.718211050193522
+    },
+    {
+      "id": "856e8033-0563-4857-a0c1-9c5f0a7e3aba",
+      "session_id": "CROSS_DEVICE_TEST",
+      "role": "user",
+      "content": "[Attachments: ] Hi! I wanted to let you know that my favorite animal is a shiny green Platypus.",
+      "similarity": 0.718211050193522
+    },
+    {
+      "id": "79039f61-4874-47b3-9e3a-e4c15ee0f6e7",
+      "session_id": "test-session-1772048557887",
+      "role": "user",
+      "content": "My absolute favorite car is the Tesla Cybertruck. I love the angular design.",
+      "similarity": 0.666738847889353
+    },
+    {
+      "id": "300e94f8-d2ef-416f-8689-933bf8fe6142",
+      "session_id": "test-session-1772049067597",
+      "role": "user",
+      "content": "My absolute favorite car is the Tesla Cybertruck. I love the angular design.",
+      "similarity": 0.666738847889353
+    },
+    {
+      "id": "ca2de485-987b-43a4-a791-37fad771a0bd",
+      "session_id": "test-session-1772049067597",
+      "role": "user",
+      "content": "I also enjoy hiking on the weekends in the local mountains.",
+      "similarity": 0.570483582529382
+    },
+    {
+      "id": "ecab5022-4139-4a32-adcb-c0589a4c3ff1",
+      "session_id": "test-session-1772048557887",
+      "role": "user",
+      "content": "I also enjoy hiking on the weekends in the local mountains.",
+      "similarity": 0.570483582529382
+    },
+    {
+      "id": "65e581eb-fc84-4369-b3ba-9cc524f34fd4",
+      "session_id": "test-session-1772049067597",
+      "role": "assistant",
+      "content": "That's quite a unique vehicle! The stainless steel exoskeleton is very distinctive.",
+      "similarity": 0.557783940630938
+    },
+    {
+      "id": "b141e034-8efd-401d-bddf-445675fd0378",
+      "session_id": "test-session-1772048557887",
+      "role": "assistant",
+      "content": "That's quite a unique vehicle! The stainless steel exoskeleton is very distinctive.",
+      "similarity": 0.557783940630938
+    }
+  ]
+}

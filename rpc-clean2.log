@@ -1,0 +1,11 @@
+[dotenv@17.3.1] injecting env (9) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+Searching for: 'favorite animal'
+Found 5 matches.
+- Role: assistant | Context: I do not have your favorite animal on record. If you'd like to tell me, I can save it to my memory f
+- Role: user | Context: Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.
+- Role: user | Context: Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.
+- Role: user | Context: Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.
+- Role: user | Context: Do you remember what my favorite animal is? I told you on the Web Dashboard a second ago.

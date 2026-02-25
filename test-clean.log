@@ -1,0 +1,48 @@
+[dotenv@17.3.1] injecting env (9) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🛡️ auth for agents: https://vestauth.com
+Testing Supabase Memory Integration...
+
+--- 1. Saving Messages ---
+Saving message 1...
+Saving message 2...
+Saving message 3...
+Messages saved.
+
+--- 2. Fetching Session History ---
+[
+  {
+    "role": "user",
+    "content": "My absolute favorite car is the Tesla Cybertruck. I love the angular design.",
+    "created_at": "2026-02-25T19:51:08.088307+00:00"
+  },
+  {
+    "role": "assistant",
+    "content": "That's quite a unique vehicle! The stainless steel exoskeleton is very distinctive.",
+    "created_at": "2026-02-25T19:51:08.457049+00:00"
+  },
+  {
+    "role": "user",
+    "content": "I also enjoy hiking on the weekends in the local mountains.",
+    "created_at": "2026-02-25T19:51:08.859336+00:00"
+  }
+]
+
+--- 3. Testing Semantic Search ---
+Searching for: "What kind of cars do I like?"
+[
+  {
+    "id": "79039f61-4874-47b3-9e3a-e4c15ee0f6e7",
+    "session_id": "test-session-1772048557887",
+    "role": "user",
+    "content": "My absolute favorite car is the Tesla Cybertruck. I love the angular design.",
+    "similarity": 0.722289994377197
+  },
+  {
+    "id": "300e94f8-d2ef-416f-8689-933bf8fe6142",
+    "session_id": "test-session-1772049067597",
+    "role": "user",
+    "content": "My absolute favorite car is the Tesla Cybertruck. I love the angular design.",
+    "similarity": 0.722289994377197
+  }
+]

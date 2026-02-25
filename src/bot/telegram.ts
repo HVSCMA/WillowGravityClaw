@@ -3,7 +3,7 @@ import path from "path";
 import { Bot, InputFile } from "grammy";
 import { config } from "../config.js";
 import { whitelistMiddleware } from "./middleware.js";
-import { runAgentLoop, resetContext, compactContext, setCurrentModel, setCurrentThinkLevel } from "../agent/loop.js";
+import { runAgentLoop, resetSessionContext, compactContext, setCurrentModel, setCurrentThinkLevel } from "../agent/loop.js";
 import { transcribeAudio } from "../services/whisper.js";
 import { generateSpeech } from "../services/elevenlabs.js";
 import { getSessionUsageStats } from "../db/memory.js";
@@ -20,7 +20,7 @@ bot.command("start", async (ctx) => {
 });
 
 bot.command("new", async (ctx) => {
-    resetContext();
+    await resetSessionContext(ctx.chat.id.toString());
     await ctx.reply("🧹 *Context Wiped:*\nI've cleared the recent conversation window. (My long-term vectorized memory is unaffected).", { parse_mode: "Markdown" });
 });
 
@@ -111,7 +111,7 @@ bot.on("message:text", async (ctx) => {
     await ctx.replyWithChatAction("typing");
 
     try {
-        const reply = await runAgentLoop(userMessage);
+        const reply = await runAgentLoop(userMessage, undefined, undefined, ctx.chat.id.toString());
         await ctx.reply(reply);
     } catch (error) {
         console.error("Agent Loop Error:", error);
@@ -169,7 +169,7 @@ bot.on("message:voice", async (ctx) => {
             await ctx.reply(`🗣️ *You said:* "${transcription}"`, { parse_mode: "Markdown" });
 
             // 4. Run the conversational agent loop with the transcribed text
-            replyText = await runAgentLoop(transcription);
+            replyText = await runAgentLoop(transcription, undefined, undefined, ctx.chat.id.toString());
         } finally {
             clearInterval(typingInterval);
         }
@@ -237,7 +237,7 @@ bot.on(["message:photo", "message:document"], async (ctx) => {
         let typingInterval = setInterval(() => ctx.replyWithChatAction("typing").catch(() => { }), 4000);
 
         try {
-            const replyText = await runAgentLoop(userMessage || "Describe this file.", [{ buffer, mimeType }]);
+            const replyText = await runAgentLoop(userMessage || "Describe this file.", [{ buffer, mimeType }], undefined, ctx.chat.id.toString());
             await ctx.reply(replyText);
         } finally {
             clearInterval(typingInterval);

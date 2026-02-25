@@ -57,7 +57,7 @@ export async function runAgentLoop(
     // 2. Deep Semantic Context
     let semanticMemoryBlock = "";
     if (userMessage && userMessage.length > 4) {
-        const similarMemories = await searchSimilarMessages(userMessage, 0.4, 4, sessionId);
+        const similarMemories = await searchSimilarMessages(userMessage, 0.4, 15, sessionId);
         if (similarMemories.length > 0) {
             semanticMemoryBlock = "\n\n[RELEVANT PAST MEMORIES RETRIEVED VIA SEMANTIC SEARCH]\n" +
                 similarMemories.map(m => `[Old Session: ${m.session_id}] ${m.role.toUpperCase()}: ${m.content}`).join("\n");
@@ -93,7 +93,7 @@ export async function runAgentLoop(
         for (const item of media) {
             // Convert to base64 Data URL for OpenAI vision
             const b64 = item.buffer.toString("base64");
-            const dataUrl = `data:${item.mimeType}; base64, ${b64} `;
+            const dataUrl = `data:${item.mimeType};base64,${b64}`;
             currentUserContent.push({
                 type: "image_url",
                 image_url: { url: dataUrl }
@@ -159,10 +159,11 @@ export async function runAgentLoop(
                     // Broadcast to the PolyMorphic UI that we are using a tool
                     updateLiveCanvas({ type: "markdown", content: `*Agent is using tool:* \`${toolName}\`...` }, fublead);
 
-                    const result = await executeTool(toolName, args);
+                    const result = await executeTool(toolName, args, sessionId);
 
                     // ROI GATE: Detect tool errors
                     const resultStr = typeof result === "string" ? result : JSON.stringify(result);
+                    console.log(`[Agent] Tool ${toolName} Returned:`, resultStr.substring(0, 200) + (resultStr.length > 200 ? "..." : ""));
                     if (resultStr.toLowerCase().includes("error")) {
                         consecutiveToolErrors++;
                     } else {

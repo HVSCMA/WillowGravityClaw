@@ -1,4 +1,4 @@
-import { saveDocument, searchDocuments } from "../db/memory.js";
+import { saveMessage, searchSimilarMessages } from "../memory/supabaseMemory.js";
 import { OpenAITool } from "../services/mcp.js";
 
 export const saveToMemoryDeclaration: OpenAITool = {
@@ -19,8 +19,9 @@ export const saveToMemoryDeclaration: OpenAITool = {
     }
 };
 
-export async function executeSaveToMemory(args: any): Promise<any> {
-    saveDocument(args.content);
+export async function executeSaveToMemory(args: any, sessionId?: string): Promise<any> {
+    const session = sessionId || "default-session";
+    await saveMessage(session, "assistant", `[Fact Memory] ${args.content}`);
     return { success: true, message: "Saved to memory." };
 }
 
@@ -42,7 +43,8 @@ export const searchMemoryDeclaration: OpenAITool = {
     }
 };
 
-export async function executeSearchMemory(args: any): Promise<any> {
-    const results = searchDocuments(args.query);
-    return { results };
+export async function executeSearchMemory(args: any, sessionId?: string): Promise<any> {
+    const session = sessionId || "default-session";
+    const results = await searchSimilarMessages(args.query, 0.4, 15, session);
+    return { results: results.map(r => `[Role: ${r.role}] ${r.content}`) };
 }

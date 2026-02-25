@@ -1,0 +1,26 @@
+[dotenv@17.3.1] injecting env (9) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+=========================================
+ 🌐 SIMULATING WEB DASHBOARD MESSAGE
+=========================================
+Sending Web Dashboard payload (fublead: CROSS_DEVICE_TEST):
+"Hi! I wanted to let you know that my favorite animal is a shiny green Platypus."
+(node:17272) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[Agent] Iteration 1 sending to google/gemini-2.5-pro...
+[MCP] Starting server 'everything' via npx -y @modelcontextprotocol/server-everything...
+Starting default (STDIO) server...
+[MCP] Connected to everything server.
+[MCP] Found 13 tools from everything
+[Agent] Calling tool: search_memory 
+[Agent] Iteration 2 sending to google/gemini-2.5-pro...
+[MCP] Found 13 tools from everything
+
+🤖 Agent's Reply on Web Dashboard: 
+"I do not have your favorite animal on record. If you'd like to tell me, I can save it to my memory for future reference."
+
+=========================================
+ ✅ WEB TEST COMPLETE
+=========================================

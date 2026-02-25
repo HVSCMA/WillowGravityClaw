@@ -72,7 +72,7 @@ export async function getSessionHistory(sessionId: string, limit: number = 15): 
 /**
  * Searches the entire database for messages that semantically match the query text.
  */
-export async function searchSimilarMessages(query: string, matchThreshold: number = 0.5, matchCount: number = 5, currentSessionId?: string): Promise<ChatMessage[]> {
+export async function searchSimilarMessages(query: string, matchThreshold: number = 0.5, matchCount: number = 15, currentSessionId?: string): Promise<ChatMessage[]> {
     if (!query) return [];
 
     try {
@@ -83,7 +83,7 @@ export async function searchSimilarMessages(query: string, matchThreshold: numbe
             query_embedding: queryEmbedding,
             match_threshold: matchThreshold,
             match_count: matchCount,
-            exclude_session_id: currentSessionId || null
+            exclude_session_id: null // FIX: Allow retrieving memories from the user's own cross-device session
         });
 
         if (error) {

@@ -62,15 +62,15 @@ export async function getTools(): Promise<OpenAITool[]> {
     return allDeclarations;
 }
 
-export async function executeTool(name: string, args: any): Promise<any> {
+export async function executeTool(name: string, args: any, sessionId?: string): Promise<any> {
     if (name === "get_current_time") {
         return await executeCurrentTime(args);
     }
     if (name === "save_to_memory") {
-        return await executeSaveToMemory(args);
+        return await executeSaveToMemory(args, sessionId);
     }
     if (name === "search_memory") {
-        return await executeSearchMemory(args);
+        return await executeSearchMemory(args, sessionId);
     }
     if (name === "search_web") {
         return await executeWebSearch(args);
