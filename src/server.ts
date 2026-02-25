@@ -266,36 +266,37 @@ app.post("/api/chat", async (req, res) => {
     }
 });
 
-// Real-Time Voice Dialog API
+// Real-Time Voice & Text Dialog API
 app.post("/api/dialog", async (req, res) => {
     try {
-        const { audioBase64, mimeType, sessionId } = req.body;
-        if (!audioBase64) {
-            return res.status(400).json({ error: "Missing audio data." });
+        const { audioBase64, textPrompt, mimeType, sessionId } = req.body;
+        if (!audioBase64 && !textPrompt) {
+            return res.status(400).json({ error: "Missing audio or text input data." });
         }
 
         const sid = sessionId || "dialog-mobile";
-        console.log(`[Dialog API] Received audio chunk for session: ${sid}`);
-
-        // Write base64 to temp file for Whisper processing
-        const audioBuffer = Buffer.from(audioBase64, "base64");
-        // Use a unique file name to prevent collision
-        const tempPath = path.join(process.cwd(), `temp_dialog_${Date.now()}_${Math.floor(Math.random() * 1000)}.webm`);
-        fs.writeFileSync(tempPath, audioBuffer);
+        console.log(`[Dialog API] Received multimodal chunk for session: ${sid}`);
 
         let userTranscript = "";
         let agentReply = "";
         let audioBase64Out = "";
 
         try {
-            // 1. Transcribe the audio via Gemini/Whisper fallback
-            userTranscript = await transcribeAudio(tempPath);
-            fs.unlinkSync(tempPath); // Clean up immediately
+            if (audioBase64) {
+                // Write base64 to temp file for Whisper processing
+                const audioBuffer = Buffer.from(audioBase64, "base64");
+                const tempPath = path.join(process.cwd(), `temp_dialog_${Date.now()}_${Math.floor(Math.random() * 1000)}.webm`);
+                fs.writeFileSync(tempPath, audioBuffer);
 
-            console.log(`[Dialog] Transcript: "${userTranscript}"`);
+                userTranscript = await transcribeAudio(tempPath);
+                fs.unlinkSync(tempPath); // Clean up immediately
+                updateLiveCanvas({ type: "markdown", content: `*(Microphone Transcript)*: ${userTranscript}` }, sid);
+            } else if (textPrompt) {
+                userTranscript = textPrompt;
+                updateLiveCanvas({ type: "markdown", content: `*(Keyboard Input)*: ${userTranscript}` }, sid);
+            }
 
-            // Push to Canvas for observation
-            updateLiveCanvas({ type: "markdown", content: `*(Microphone Transcript)*: ${userTranscript}` }, sid);
+            console.log(`[Dialog] Transcript/Text: "${userTranscript}"`);
             updateLiveCanvas({ type: "markdown", content: "*Thinking...*" }, sid);
 
             // 2. Process via Agent Loop using full autonomous reasoning
@@ -303,16 +304,46 @@ app.post("/api/dialog", async (req, res) => {
 
             updateLiveCanvas({ type: "markdown", content: agentReply }, sid);
 
-            // 3. Generate synthesized ElevenLabs speech
-            // Strip any markdown code blocks from the spoken response, this is an auditory channel
-            const cleanText = agentReply.replace(/```[\s\S]*?```/g, "").replace(/\\*/g, "").trim();
-            const responseAudioBuffer = await generateSpeech(cleanText);
-            audioBase64Out = responseAudioBuffer.toString("base64");
+            // INTERCEPT PHASE 8 WIDGETS
+            // Check if the agent requested to render a structural HTML widget
+            const widgetRegex = /<widget[\s\S]*?>([\s\S]*?)<\/widget>/gi;
+            const widgetMatches = [...agentReply.matchAll(widgetRegex)];
+
+            let finalSpokenReply = agentReply;
+            if (widgetMatches.length > 0) {
+                // Combine all widget inner HTMLs and push them straight to the client over socket.io natively
+                const combinedWidgetHtml = widgetMatches.map(m => m[1]).join("\n");
+                io.emit("canvas-widget", { sessionId: sid, html: combinedWidgetHtml });
+
+                // Strip the exact widget tags completely from the spoken response
+                finalSpokenReply = agentReply.replace(widgetRegex, "").trim();
+            } else {
+                // Optional: clear canvas or leave as is. We will leave it.
+            }
+
+            // 3. Generate synthesized ElevenLabs speech for the CLEANED verbal reply only
+            if (finalSpokenReply.trim().length > 0) {
+                // Strip markdown code blocks, widget remnants, and ANY raw HTML tags before sending to TTS
+                let cleanText = finalSpokenReply
+                    .replace(/```[\s\S]*?```/g, "") // Code blocks
+                    .replace(/<widget[\s\S]*?<\/widget>/gi, "") // Stray widgets
+                    .replace(/<[^>]*>?/gm, '') // All generic HTML tags (e.g. <div>, <a>)
+                    .replace(/\\*/g, "") // Markdown bold/italics
+                    .replace(/&nbsp;/g, " ") // HTML entities
+                    .trim();
+
+                // If the entire reply was just a widget, give a short auditory confirmation
+                if (cleanText.length === 0) {
+                    cleanText = "I have rendered the requested payload.";
+                }
+
+                const responseAudioBuffer = await generateSpeech(cleanText);
+                audioBase64Out = responseAudioBuffer.toString("base64");
+            }
 
         } catch (innerErr: any) {
             console.error("[Dialog API] Pipeline error:", innerErr);
-            if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
-            agentReply = "Sorry, my sensory processors encountered an error interpreting the audio.";
+            agentReply = "Sorry, my sensory processors encountered an error interpreting the input.";
         }
 
         res.status(200).json({
