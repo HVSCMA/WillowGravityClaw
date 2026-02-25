@@ -23,7 +23,7 @@ function initializeSidecar() {
 function updateSidecarUrl(leadId) {
     const iframe = document.getElementById('gravity-claw-sidecar-iframe');
     if (iframe && leadId) {
-        const newUrl = `http://localhost:3000/?fublead=${leadId}&mode=sidecar`;
+        const newUrl = `https://hvscma-production.up.railway.app/?fublead=${leadId}&mode=sidecar`;
         // Only update if it changed to avoid reloading
         if (iframe.src !== newUrl) {
             iframe.src = newUrl;
@@ -58,7 +58,7 @@ async function harvestSensoryData() {
     console.log("[Gravity Claw] Firing Sensory Webhook for Lead:", currentLeadId);
 
     try {
-        await fetch("http://localhost:3000/api/sensory/fub_lead", {
+        await fetch("https://hvscma-production.up.railway.app/api/sensory/fub_lead", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)

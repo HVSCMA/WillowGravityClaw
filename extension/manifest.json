@@ -11,7 +11,8 @@
     ],
     "host_permissions": [
         "https://*.followupboss.com/*",
-        "http://localhost:3000/*"
+        "http://localhost:3000/*",
+        "https://hvscma-production.up.railway.app/*"
     ],
     "action": {
         "default_icon": {
