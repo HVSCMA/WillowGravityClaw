@@ -41,9 +41,11 @@ export async function runAgentLoop(
     sessionIdParam?: string
 ): Promise<string> {
     const sessionId = sessionIdParam || fublead || "default-session";
-    const messageLog = media ? `[Attachments: ${media.map(m => m.mimeType).join(', ')}] ${userMessage}` : userMessage;
+    const messageLog = media && media.length > 0
+        ? `[Sensory Visual Attachment Supplied] ${userMessage}`
+        : userMessage;
 
-    // Save User message asynchronously
+    // Save User message asynchronously (Text only, no raw buffers that would crash the pgvector embedder)
     saveMessage(sessionId, "user", messageLog);
 
     // 1. Immediate Chronological Context
