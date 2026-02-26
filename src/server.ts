@@ -23,7 +23,8 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Serve static frontend files for Live Canvas (with strict anti-caching for real-time PWAs)
 app.use(express.static(path.join(process.cwd(), "public"), {
