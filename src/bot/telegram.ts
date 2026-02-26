@@ -111,7 +111,9 @@ bot.on("message:text", async (ctx) => {
     await ctx.replyWithChatAction("typing");
 
     try {
-        const reply = await runAgentLoop(userMessage, undefined, undefined, ctx.chat.id.toString());
+        let reply = await runAgentLoop(userMessage, undefined, undefined, ctx.chat.id.toString());
+        // Strip out any HTML widgets intended for the web dashboard 
+        reply = reply.replace(/<widget[\s\S]*?<\/widget>/gi, "").trim();
         await ctx.reply(reply);
     } catch (error) {
         console.error("Agent Loop Error:", error);
@@ -179,6 +181,7 @@ bot.on("message:voice", async (ctx) => {
 
         try {
             // 5. Generate TTS audio with ElevenLabs
+            replyText = replyText.replace(/<widget[\s\S]*?<\/widget>/gi, "").trim();
             const audioBuffer = await generateSpeech(replyText);
 
             // 6. Send the generated speech and the text backup
@@ -237,7 +240,9 @@ bot.on(["message:photo", "message:document"], async (ctx) => {
         let typingInterval = setInterval(() => ctx.replyWithChatAction("typing").catch(() => { }), 4000);
 
         try {
-            const replyText = await runAgentLoop(userMessage || "Describe this file.", [{ buffer, mimeType }], undefined, ctx.chat.id.toString());
+            let replyText = await runAgentLoop(userMessage || "Describe this file.", [{ buffer, mimeType }], undefined, ctx.chat.id.toString());
+            // Strip out dashboard widgets from the multimodal response
+            replyText = replyText.replace(/<widget[\s\S]*?<\/widget>/gi, "").trim();
             await ctx.reply(replyText);
         } finally {
             clearInterval(typingInterval);
