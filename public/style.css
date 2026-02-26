@@ -860,3 +860,113 @@ body.sidecar-mode .canvas-input-area {
     border-radius: 10px;
     margin-left: 0.5rem;
 }
+
+/* ========================================= */
+/* PHASE 8 & 9: BROKER COACH UI WIDGETS      */
+/* ========================================= */
+.cm-widget {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+    border-left: 3px solid var(--accent);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    margin-top: 10px;
+}
+
+.cm-widget h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cm-widget p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 12px 0;
+    line-height: 1.5;
+}
+
+.cm-widget .cm-btn {
+    background: rgba(203, 163, 107, 0.15);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    width: 100%;
+    text-align: center;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+.cm-widget .cm-btn:hover {
+    background: var(--accent);
+    color: var(--bg-base);
+    box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.broker-coach {
+    border-left: 3px solid var(--success);
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.95));
+}
+
+.broker-coach h3 {
+    color: var(--success);
+}
+
+.action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.action-grid .cm-btn {
+    margin-top: 0;
+}
+
+.suggestion-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.suggestion-box h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.sms-bubble {
+    background: #1d4ed8;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(29, 78, 216, 0.3);
+}
+
+.cm-btn.outline {
+    background: transparent;
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+.cm-btn.outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    box-shadow: none;
+}

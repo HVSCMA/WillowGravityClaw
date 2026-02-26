@@ -264,8 +264,22 @@ app.post("/api/chat", async (req, res) => {
         // Run the agent loop (passing fublead context)
         const aiResponse = await runAgentLoop(message || "Analyze this image.", mediaFrames, fublead, fublead || "web-dashboard");
 
-        // Push the final result to the canvas
-        updateLiveCanvas({ type: "markdown", content: aiResponse }, fublead);
+        // Extract UI Widgets from text
+        const widgetRegex = /<widget[\s\S]*?>([\s\S]*?)<\/widget>/gi;
+        const widgetMatches = [...aiResponse.matchAll(widgetRegex)];
+
+        let finalMarkdownReply = aiResponse;
+        if (widgetMatches.length > 0) {
+            const combinedWidgetHtml = widgetMatches.map(m => m[1]).join("\n");
+            // Push widget for structural rendering
+            updateLiveCanvas({ type: "widget", widgetType: "broker-coach", content: combinedWidgetHtml }, fublead);
+            finalMarkdownReply = aiResponse.replace(widgetRegex, "").trim();
+        }
+
+        // Push remaining text as markdown
+        if (finalMarkdownReply) {
+            updateLiveCanvas({ type: "markdown", content: finalMarkdownReply }, fublead);
+        }
 
         res.status(200).json({ status: "Success" });
     } catch (error) {

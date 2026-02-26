@@ -446,5 +446,32 @@ window.executeExecutionProtocol = async function (leadId) {
     }
 }
 
+// Anticipatory UI Functions for Widget Injection
+window.submitTextPrompt = async function (promptString) {
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    if (!promptString || !chatInput || !chatSend) return;
+
+    // Visually feed into the GUI loop
+    chatInput.value = promptString;
+    chatSend.click();
+};
+
+window.copyText = function (btn) {
+    const textTarget = btn.parentElement.querySelector('div, p, span.sms-bubble');
+    const textToCopy = textTarget ? textTarget.innerText.replace(/"/g, '') : "Failed to extract text";
+    navigator.clipboard.writeText(textToCopy);
+
+    const originalText = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.color = '';
+        btn.style.borderColor = '';
+    }, 2000);
+}
+
 // Start
 document.addEventListener('DOMContentLoaded', initDashboard);
