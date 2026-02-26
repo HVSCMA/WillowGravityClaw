@@ -9,18 +9,22 @@ export interface ChatMessage {
     created_at?: string;
 }
 
+// Ephemeral fallback memory if Supabase API keys are missing in production
+const ephemeralFallback: Record<string, ChatMessage[]> = {};
+
 /**
- * Saves a new message to the persistent memory store in Supabase.
- * Generates and stores a unique vector embedding of the text content for future semantic recall.
+ * Saves a new message to the persistent memory store in Supabase or ephemeral fallback.
  */
 export async function saveMessage(sessionId: string, role: 'user' | 'model' | 'assistant' | 'system', content: string): Promise<void> {
     if (!sessionId || !content) return;
 
+    if (!ephemeralFallback[sessionId]) {
+        ephemeralFallback[sessionId] = [];
+    }
+    ephemeralFallback[sessionId].push({ session_id: sessionId, role, content, created_at: new Date().toISOString() });
+
     try {
         let embedding: number[] | null = null;
-
-        // We generally only care about semantic search over user context or major assistant replies
-        // If it's a very short or structural message, we might skip embedding, but here we embed all.
         try {
             embedding = await generateEmbedding(content);
         } catch (embedError) {
@@ -35,10 +39,10 @@ export async function saveMessage(sessionId: string, role: 'user' | 'model' | 'a
         });
 
         if (error) {
-            console.error('[Memory] Error saving message to Supabase:', error);
+            console.warn('[Memory] Supabase error (expected in some envs). Falling back to ephemeral.', error.message);
         }
     } catch (err) {
-        console.error('[Memory] Unexpected error in saveMessage:', err);
+        console.warn('[Memory] Supabase unreachable. Falling back to native ephemeral RAM.', err);
     }
 }
 
@@ -56,16 +60,16 @@ export async function getSessionHistory(sessionId: string, limit: number = 15): 
             .order('created_at', { ascending: false }) // Get newest first
             .limit(limit);
 
-        if (error) {
-            console.error('[Memory] Error fetching session history:', error);
-            return [];
+        if (error || !data || data.length === 0) {
+            console.warn('[Memory] Database fetch failed or empty, returning ephemeral memory tier.');
+            return (ephemeralFallback[sessionId] || []).slice(-limit) as ChatMessage[];
         }
 
         // Return ordered oldest-first for the LLM context window
         return (data || []).reverse() as ChatMessage[];
     } catch (err) {
-        console.error('[Memory] Unexpected error in getSessionHistory:', err);
-        return [];
+        console.warn('[Memory] Database fetch unreachable, returning ephemeral memory tier.', err);
+        return (ephemeralFallback[sessionId] || []).slice(-limit) as ChatMessage[];
     }
 }
 
@@ -78,22 +82,24 @@ export async function searchSimilarMessages(query: string, matchThreshold: numbe
     try {
         const queryEmbedding = await generateEmbedding(query);
 
-        // Call our postgres RPC function "match_messages"
-        const { data, error } = await supabase.rpc('match_messages', {
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('RPC Timeout')), 5000));
+        const rpcPromise = supabase.rpc('match_messages', {
             query_embedding: queryEmbedding,
             match_threshold: matchThreshold,
             match_count: matchCount,
-            exclude_session_id: null // FIX: Allow retrieving memories from the user's own cross-device session
+            exclude_session_id: null
         });
 
-        if (error) {
-            console.error('[Memory] RPC Error in searchSimilarMessages:', error);
+        const { data, error } = await Promise.race([rpcPromise, timeoutPromise]) as any;
+
+        if (error || !data) {
+            console.warn('[Memory] Suppressed RPC Error in searchSimilarMessages.');
             return [];
         }
 
         return data as ChatMessage[];
     } catch (err) {
-        console.error('[Memory] Unexpected error in searchSimilarMessages:', err);
+        console.warn('[Memory] Supabase vector search gracefully bypassed.', err);
         return [];
     }
 }
