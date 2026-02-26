@@ -50,8 +50,20 @@ export async function executeSwarmDelegation(args: any): Promise<any> {
             { role: "user", content: args.task }
         ];
 
-        const response = await ai.chat.completions.create({
-            model: targetModel,
+        let activeClient = ai;
+        let activeModel = targetModel;
+
+        // Dynamic API Key Fallback to native Gemini proxy
+        if (targetModel.includes("gemini") || (!config.OPENROUTER_API_KEY && config.GEMINI_API_KEY)) {
+            activeClient = new OpenAI({
+                baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+                apiKey: config.GEMINI_API_KEY || ""
+            });
+            activeModel = "gemini-2.5-pro";
+        }
+
+        const response = await activeClient.chat.completions.create({
+            model: activeModel,
             messages: conversationHistory
         });
 
