@@ -13,10 +13,17 @@ export async function transcribeAudio(filePath: string): Promise<string> {
         const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
         const fileManager = new GoogleAIFileManager(config.GEMINI_API_KEY);
 
+        const ext = filePath.split('.').pop()?.toLowerCase();
+        let mimeType = "audio/ogg"; // Telegram default
+        if (ext === "webm") mimeType = "audio/webm";
+        else if (ext === "mp3") mimeType = "audio/mp3";
+        else if (ext === "mp4") mimeType = "audio/mp4";
+        else if (ext === "wav") mimeType = "audio/wav";
+
         // Upload the file to Gemini API
         const uploadResponse = await fileManager.uploadFile(filePath, {
-            mimeType: "audio/ogg",
-            displayName: "Telegram Voice Note",
+            mimeType: mimeType,
+            displayName: "Sensory Audio Input",
         });
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
