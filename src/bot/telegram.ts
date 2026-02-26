@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { Bot, InputFile, Keyboard } from "grammy";
+import { Bot, InputFile, InlineKeyboard } from "grammy";
 import { config } from "../config.js";
 import { whitelistMiddleware } from "./middleware.js";
 import { runAgentLoop, resetSessionContext, compactContext, setCurrentModel, setCurrentThinkLevel } from "../agent/loop.js";
@@ -14,7 +14,7 @@ export const bot = new Bot(config.TELEGRAM_BOT_TOKEN);
 bot.use(whitelistMiddleware);
 
 // --- Widget to Keyboard Parser ---
-function extractWidgetsAndBuildKeyboard(text: string): { cleanText: string; replyMarkup: any } {
+function extractWidgetsAndBuildKeyboard(text: string): { cleanText: string; replyMarkup: any; labels: string[] } {
     let cleanText = text;
     let labels: string[] = [];
 
@@ -34,12 +34,16 @@ function extractWidgetsAndBuildKeyboard(text: string): { cleanText: string; repl
 
     let replyMarkup = undefined;
     if (labels.length > 0) {
-        const keyboard = new Keyboard();
-        labels.forEach(l => keyboard.text(l).row());
-        replyMarkup = keyboard.oneTime().resized();
+        const keyboard = new InlineKeyboard();
+        labels.forEach(l => {
+            // Callback data has a 64 byte limit in Telegram. 
+            // We use the full label as the visual text, but truncate the payload ID.
+            keyboard.text(l, "btn_" + l.substring(0, 40)).row();
+        });
+        replyMarkup = keyboard;
     }
 
-    return { cleanText, replyMarkup };
+    return { cleanText, replyMarkup, labels };
 }
 
 // --- Slash Commands ---
@@ -114,6 +118,55 @@ bot.command("think", async (ctx) => {
         await ctx.reply(`🧠 *Cognitive Level Adjusted*\nThinking mode is now set to: \`${level}\``, { parse_mode: "Markdown" });
     } else {
         await ctx.reply("❌ Usage: `/think <high|low|default>`", { parse_mode: "Markdown" });
+    }
+});
+
+// --- Callback Queries (Inline Keyboard Router) ---
+bot.on("callback_query:data", async (ctx) => {
+    // Acknowledge the button click so it stops spinning
+    await ctx.answerCallbackQuery();
+
+    const callbackData = ctx.callbackQuery.data;
+    if (!callbackData.startsWith("btn_")) return;
+
+    // The button acts as a user sending an explicit text command
+    // We recreate the prompt from the button's visual text, which matches the callback id (mostly)
+    // To get the exact text, we can pull it from the inline keyboard markup, but simpler is
+    // to just feed the shortened callback data if we can't find the exact match.
+    // For robust UX, we will extract the exact text from the inline keyboard row:
+    let exactText = callbackData.replace("btn_", "");
+    if (ctx.callbackQuery.message?.reply_markup && 'inline_keyboard' in ctx.callbackQuery.message.reply_markup) {
+        const rows = ctx.callbackQuery.message.reply_markup.inline_keyboard;
+        for (const row of rows) {
+            for (const btn of row) {
+                if ('callback_data' in btn && btn.callback_data === callbackData) {
+                    exactText = btn.text;
+                }
+            }
+        }
+    }
+
+    // Echo what the user clicked so there is an audit trail in the chat
+    await ctx.reply(`👉 _Executed action:_ *${exactText}*`, { parse_mode: "Markdown" });
+
+    // Reroute it back through the main Agent Loop just like a normal text message
+    let typingInterval = setInterval(() => ctx.replyWithChatAction("typing").catch(() => { }), 4000);
+    await ctx.replyWithChatAction("typing");
+
+    try {
+        let reply = await runAgentLoop(exactText, undefined, undefined, ctx.chat?.id?.toString() || "telegram-callback");
+        const { cleanText, replyMarkup } = extractWidgetsAndBuildKeyboard(reply);
+
+        if (replyMarkup) {
+            await ctx.reply(cleanText, { reply_markup: replyMarkup });
+        } else {
+            await ctx.reply(cleanText);
+        }
+    } catch (error) {
+        console.error("Callback Action Error:", error);
+        await ctx.reply("Sorry, I encountered an internal error processing that action.");
+    } finally {
+        clearInterval(typingInterval);
     }
 });
 
