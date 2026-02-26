@@ -243,6 +243,7 @@ function initCanvas() {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
                 localMediaStream = stream;
                 hardwareStreamVideo.srcObject = stream;
+                hardwareStreamVideo.play().catch(e => console.warn("[Canvas] Autoplay hardware lock ignored:", e));
                 opticPreviewContainer.classList.remove('hidden');
                 opticToggleBtn.classList.add('active');
                 hardwareStreamActive = true;
@@ -263,14 +264,19 @@ function initCanvas() {
         if (!hardwareStreamActive || !hardwareStreamVideo) return null;
 
         const canvas = document.createElement('canvas');
-        canvas.width = hardwareStreamVideo.videoWidth;
-        canvas.height = hardwareStreamVideo.videoHeight;
+        canvas.width = hardwareStreamVideo.videoWidth || 640;
+        canvas.height = hardwareStreamVideo.videoHeight || 480;
 
         const ctx = canvas.getContext('2d');
         ctx.drawImage(hardwareStreamVideo, 0, 0, canvas.width, canvas.height);
 
         // Return Base64 JPEG data
-        return canvas.toDataURL('image/jpeg', 0.85); // 85% quality to save bandwidth
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85); // 85% quality to save bandwidth
+        if (!dataUrl || dataUrl === "data:,") {
+            console.warn("[Canvas] Optic Nerve frame capture failed (empty buffer).");
+            return null;
+        }
+        return dataUrl;
     }
 
     // Chat Sending Logic
