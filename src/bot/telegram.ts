@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { Bot, InputFile } from "grammy";
+import { Bot, InputFile, Keyboard } from "grammy";
 import { config } from "../config.js";
 import { whitelistMiddleware } from "./middleware.js";
 import { runAgentLoop, resetSessionContext, compactContext, setCurrentModel, setCurrentThinkLevel } from "../agent/loop.js";
@@ -12,6 +12,35 @@ export const bot = new Bot(config.TELEGRAM_BOT_TOKEN);
 
 // Strictly enforce user ID whitelisting
 bot.use(whitelistMiddleware);
+
+// --- Widget to Keyboard Parser ---
+function extractWidgetsAndBuildKeyboard(text: string): { cleanText: string; replyMarkup: any } {
+    let cleanText = text;
+    let labels: string[] = [];
+
+    const widgetRegex = /<widget[\s\S]*?<\/widget>/gi;
+    const widgetMatches = [...text.matchAll(widgetRegex)];
+
+    for (const match of widgetMatches) {
+        const widgetHtml = match[0];
+        const buttonRegex = /<button[^>]*>(.*?)<\/button>/gi;
+        const buttonMatches = [...widgetHtml.matchAll(buttonRegex)];
+        for (const btnMatch of buttonMatches) {
+            labels.push(btnMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim());
+        }
+    }
+
+    cleanText = text.replace(widgetRegex, "").trim();
+
+    let replyMarkup = undefined;
+    if (labels.length > 0) {
+        const keyboard = new Keyboard();
+        labels.forEach(l => keyboard.text(l).row());
+        replyMarkup = keyboard.oneTime().resized();
+    }
+
+    return { cleanText, replyMarkup };
+}
 
 // --- Slash Commands ---
 
@@ -112,9 +141,14 @@ bot.on("message:text", async (ctx) => {
 
     try {
         let reply = await runAgentLoop(userMessage, undefined, undefined, ctx.chat.id.toString());
-        // Strip out any HTML widgets intended for the web dashboard 
-        reply = reply.replace(/<widget[\s\S]*?<\/widget>/gi, "").trim();
-        await ctx.reply(reply);
+        // Parse widgets into native Telegram keyboards
+        const { cleanText, replyMarkup } = extractWidgetsAndBuildKeyboard(reply);
+
+        if (replyMarkup) {
+            await ctx.reply(cleanText, { reply_markup: replyMarkup });
+        } else {
+            await ctx.reply(cleanText);
+        }
     } catch (error) {
         console.error("Agent Loop Error:", error);
         await ctx.reply("Sorry, I encountered an internal error processing your request.");
@@ -181,11 +215,15 @@ bot.on("message:voice", async (ctx) => {
 
         try {
             // 5. Generate TTS audio with ElevenLabs
-            replyText = replyText.replace(/<widget[\s\S]*?<\/widget>/gi, "").trim();
-            const audioBuffer = await generateSpeech(replyText);
+            const { cleanText, replyMarkup } = extractWidgetsAndBuildKeyboard(replyText);
+            const audioBuffer = await generateSpeech(cleanText);
 
-            // 6. Send the generated speech and the text backup
-            await ctx.reply(replyText);
+            // 6. Send the generated speech and the text backup with buttons natively
+            if (replyMarkup) {
+                await ctx.reply(cleanText, { reply_markup: replyMarkup });
+            } else {
+                await ctx.reply(cleanText);
+            }
             await ctx.replyWithVoice(new InputFile(audioBuffer, "response.mp3"));
         } finally {
             clearInterval(recordingInterval);
@@ -241,9 +279,13 @@ bot.on(["message:photo", "message:document"], async (ctx) => {
 
         try {
             let replyText = await runAgentLoop(userMessage || "Describe this file.", [{ buffer, mimeType }], undefined, ctx.chat.id.toString());
-            // Strip out dashboard widgets from the multimodal response
-            replyText = replyText.replace(/<widget[\s\S]*?<\/widget>/gi, "").trim();
-            await ctx.reply(replyText);
+            // Map dashboard widgets into native Telegram buttons
+            const { cleanText, replyMarkup } = extractWidgetsAndBuildKeyboard(replyText);
+            if (replyMarkup) {
+                await ctx.reply(cleanText, { reply_markup: replyMarkup });
+            } else {
+                await ctx.reply(cleanText);
+            }
         } finally {
             clearInterval(typingInterval);
         }
